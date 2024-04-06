@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Voice Maker</title>
+</head>
+<body>
+<h1>My Voice Maker</h1>
+  <p><b>使い方</b><br>追加する文字を入力（例：あ）<br>音声ファイルのURL(<a href="https://www.dropbox.com/home">dropbox</a>の共有URL)を入力<br>「セット」ボタンをクリックして音を追加<br>これを全ての音に対して繰り返せば、Myボイスロイド完成！<br>「読み上げる文字」を入力して再生できる。</p>
+
+<input type="text" id="characterInput" placeholder="追加する一文字を入力">
+<input type="text" id="urlInput" placeholder="音声のURL">
+<button onclick="addSound()">セット</button>
+<br>
+<input type="text" id="textInput" placeholder="読み上げる文字">
+<button onclick="playSounds()">再生</button>
+<p id="errorText" style="color:red;"></p>
+
+<div id="audioElements"></div>
+
+<script>
+var textInput;
+var characterInput;
+var urlInput;
+var sounds = {};
+var index = 0;
+
+function playSounds() {
+  textInput = document.getElementById('textInput').value;
+  index = 0;
+  document.getElementById('errorText').innerText = '';
+  playSound();
+}
+
+function playSound() {
+  if (index < textInput.length) {
+    var character = textInput.charAt(index);
+    if (sounds[character]) {
+      sounds[character].addEventListener('ended', function() {
+        index++;
+        playSound();
+      }, { once: true });
+      sounds[character].currentTime = 0;
+      sounds[character].play();
+    } else {
+      document.getElementById('errorText').innerText += '音源が設定されていない文字があります: ' + character;
+      index++;
+      playSound();
+    }
+  }
+}
+
+function addSound() {
+  characterInput = document.getElementById('characterInput').value;
+  urlInput = document.getElementById('urlInput').value;
+
+  if (!characterInput || !urlInput) {
+    document.getElementById('errorText').innerText = '文字とURLを入力してください';
+    return;
+  }
+
+  if (sounds[characterInput]) {
+    document.getElementById('errorText').innerText = '文字が重複しています';
+    return;
+  }
+
+  // Replace 'www.dropbox.com' with 'dl.dropboxusercontent.com' in the URL
+  urlInput = urlInput.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+
+  const audioElement = document.createElement('audio');
+  audioElement.id = characterInput;
+  audioElement.src = urlInput;
+  audioElement.controls = true;
+
+  document.getElementById('audioElements').appendChild(audioElement);
+
+  sounds[characterInput] = audioElement;
+
+  document.getElementById('characterInput').value = '';
+  document.getElementById('urlInput').value = '';
+  document.getElementById('errorText').innerText = '';
+}
+</script>
+</body>
+</html>
